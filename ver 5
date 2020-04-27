@@ -1,0 +1,138 @@
+import maya.cmds as cmds
+
+
+Path = r"Z:\3D World\Keny\Scripts\KC_UV_Material\Maps".replace('\\','/')
+FileType = 'jpg'
+Images = 5
+
+
+
+
+
+FilePath = Path + '/TEX_01.' + FileType
+def AssignMaterial():
+    if cmds.objExists('KC_Material'):
+        selected = cmds.ls(sl=1)
+        cmds.hyperShade(selected,assign='KC_Material')
+
+def ChangeTEX():
+    GetNum = cmds.getAttr("KC_File.fileTextureName")
+    Number = int(GetNum[-5])
+
+    if Number >= Images:
+        Newnumber = (Number - Number) + 1
+        TEXnum = str(Newnumber)
+
+    else:
+        Newnumber = Number + 1
+        TEXnum = str(Newnumber)
+    NewTEX = '/TEX_0' + TEXnum + '.'
+    NewFilePath = Path + NewTEX + FileType
+    
+    cmds.setAttr('KC_File.fileTextureName', NewFilePath, type="string")
+
+
+
+def AddUV():
+    hello = cmds.getAttr("KC_2dTexture.repeatU")
+    hey = int(hello)
+    hello = hey + 1
+    cmds.setAttr("KC_2dTexture.repeatU", hello)
+    cmds.setAttr("KC_2dTexture.repeatV", hello)
+
+
+
+
+def MinusUV():
+    goku = cmds.getAttr("KC_2dTexture.repeatU")
+    hey = int(goku)
+    hello = hey - 1
+    if hello == 0:
+        print 'Zero'
+    else:
+        cmds.setAttr("KC_2dTexture.repeatU", hello)
+        cmds.setAttr("KC_2dTexture.repeatV", hello)
+
+
+def closeUI():
+	if cmds.objExists('KC_Material'):
+	    if cmds.objExists('KC_Blin'):
+	        cmds.delete('KC_Material')
+	    else:
+	        cmds.rename('KC_Material', "KC_Blin")
+	if cmds.objExists('KC_File'):
+		cmds.delete('KC_File')
+	if cmds.objExists('KC_2dTexture'):
+		cmds.delete('KC_2dTexture')
+		
+    --
+    cmds.hyperShade( o='lambert3' )
+rsShdrSl = cmds.listRelatives(c=1)
+print(rsShdrSl)
+
+###########
+def KCUVChecker():
+  winName = 'myUVWindows'
+  winTitle = 'KC UV Checker'
+  winWidth = 800
+  
+  
+
+  
+ 
+  if cmds.window(winName, exists=True):
+      cmds.deleteUI(winName)
+  cmds.window(winName,menuBar = True, title= winTitle)
+  cmds.formLayout('mainC',numberOfDivisions=100)
+  
+  cmds.button('b1',l= 'Assign Material',h= 30, c= 'AssignMaterial()')
+  
+  cmds.separator('b2',h= 5)
+  
+  cmds.button('b3',l= 'Change Texture',h= 30, c= 'ChangeTEX()')
+  
+  cmds.separator('b4',h= 5)
+  
+  cmds.button('b5',l= 'Coverage -1',h= 30, c= 'MinusUV()')
+  cmds.button('b6',l= 'Coverage +1',h= 30, c= 'AddUV()')
+  
+
+  
+
+
+  
+  cmds.formLayout('mainC', edit=True, attachForm=[('b1','left',5),('b1','top',5),('b1', 'right',5)])
+  
+  cmds.formLayout('mainC', edit=True, attachForm=[('b2','left',5),('b2','top',38),('b2', 'right',5)])
+  
+  cmds.formLayout('mainC', edit=True, attachForm=[('b3','left',5),('b3','top',44),('b3', 'right',5)])
+  
+  
+  cmds.formLayout('mainC', edit=True, attachForm=[('b4','left',5),('b4','top',75),('b4', 'right',5)])
+  
+  
+  
+  cmds.formLayout('mainC', edit=True, attachForm=[('b5','left',5),('b5','top',80),('b6', 'top',80),('b6','right',5)])
+  cmds.formLayout('mainC', edit=True, attachPosition=[('b5', 'right',5, 50),('b6', 'right',5, 100)])
+  cmds.formLayout( 'mainC', edit=True, attachControl=[('b6', 'left',5, 'b5')])   
+
+  
+  
+  cmds.showWindow()
+  cmds.scriptJob(uid=[winName, 'closeUI()'])
+  cmds.window(winName, e=True, width=300, height=118)
+  if cmds.objExists('KC_Material'):
+      print('KC_Material Exists')
+  else:
+      cmds.shadingNode("blinn",asShader=True,name="KC_Material")
+      cmds.setAttr("KC_Material.specularColor", 0, 0, 0, type='double3')
+      
+      cmds.shadingNode('file', asShader=True,n = 'KC_File', asTexture=1, isColorManaged=1)
+      cmds.connectAttr('KC_File.outColor', 'KC_Material.color', f=1)
+      cmds.shadingNode('place2dTexture', asShader=True,n = 'KC_2dTexture')
+      cmds.connectAttr('KC_2dTexture.outUV', 'KC_File.uvCoord', f=1)
+      cmds.setAttr('KC_File.fileTextureName', FilePath, type="string")
+
+
+
+KCUVChecker()
