@@ -1,0 +1,46 @@
+cmds.shadingNode("blinn",asShader=True,name="gh")
+cmds.setAttr("gh.specularColor", 0, 0, 0, type='double3')
+
+cmds.shadingNode('file', asShader=True,n = 'goku', asTexture=1, isColorManaged=1)
+cmds.connectAttr('goku.outColor', 'gh.color', f=1)
+
+
+cmds.shadingNode('place2dTexture', asShader=True,n = 'sasd')
+cmds.connectAttr('sasd.outUV', 'goku.uvCoord', f=1)
+
+###
+
+cmds.setAttr('goku.fileTextureName', "Z:\3D World\Keny\References\UV\Map\Texture_Checkers\Checker_Grey2.jpg", type="string")
+cmds.setAttr("sasd.repeatU", 1)
+cmds.setAttr("sasd.repeatV", 6)
+
+
+
+
+
+
+
+#######
+
+def AddUV():
+    hello = cmds.getAttr("sasd.repeatU")
+    hey = int(hello)
+    hello = hey + 1
+    cmds.setAttr("sasd.repeatU", hello)
+    cmds.setAttr("sasd.repeatV", hello)
+
+
+AddUV()
+
+def MinusUV():
+    goku = cmds.getAttr("sasd.repeatU")
+    hey = int(goku)
+    hello = hey - 1
+    if hello == 0:
+        print 'Zero'
+    else:
+        cmds.setAttr("sasd.repeatU", hello)
+        cmds.setAttr("sasd.repeatV", hello)
+
+
+MinusUV()
