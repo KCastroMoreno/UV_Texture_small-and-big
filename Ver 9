@@ -1,0 +1,201 @@
+import maya.cmds as cmds
+
+
+Path = r"Z:\3D World\Keny\Scripts\KC_UV_Material\Maps".replace('\\','/')
+FileType = 'psd'
+Images = 5
+
+
+
+
+
+FilePath = Path + '/TEX_01.' + FileType
+def CreateKCmaterial():
+    if cmds.objExists('KC_Material'):
+        print('KC_Material Exists')
+    else:
+        cmds.shadingNode("blinn",asShader=True,name="KC_Material")
+        cmds.setAttr("KC_Material.specularColor", 0, 0, 0, type='double3')
+        
+        cmds.shadingNode('file', asShader=True,n = 'KC_File', asTexture=1, isColorManaged=1)
+        cmds.connectAttr('KC_File.outColor', 'KC_Material.color', f=1)
+        cmds.shadingNode('place2dTexture', asShader=True,n = 'KC_2dTexture')
+        cmds.connectAttr('KC_2dTexture.outUV', 'KC_File.uvCoord', f=1)
+        cmds.setAttr('KC_File.fileTextureName', FilePath, type="string")
+
+
+
+
+def AssignMaterial():
+    if cmds.objExists('KC_Material'):
+        selected = cmds.ls(sl=True)
+        for each in selected:
+            cmds.hyperShade(each,assign='KC_Material')
+            cmds.text('b4', edit=True, l='ON')
+
+
+def SwitchONOFF():
+    Switch = cmds.text('b4', q = 1, l=1)
+    LastSel = cmds.ls(sl=1)
+    if Switch == 'ON':
+        if cmds.objExists('KC_Blin'):
+            cmds.hyperShade(o='KC_Material')
+            shadeSelected = cmds.listRelatives(c=1)
+            cmds.hyperShade(shadeSelected,assign='KC_Blin')
+            cmds.text('b4', edit=True, l='OFF')
+            cmds.select(cl=1)
+            cmds.select(LastSel)
+        else:
+            cmds.shadingNode("blinn",asShader=True,name="KC_Blin")
+            cmds.setAttr("KC_Blin.specularColor", 0, 0, 0, type='double3')
+            cmds.hyperShade(o='KC_Material')
+            shadeSelected = cmds.listRelatives(c=1)
+            cmds.hyperShade(shadeSelected,assign='KC_Blin')
+            cmds.text('b4', edit=True, l='OFF')
+            cmds.select(cl=1)
+            cmds.select(LastSel)
+    elif Switch == 'OFF':
+        cmds.hyperShade(o='KC_Blin')
+        shadeSelected = cmds.listRelatives(c=1)
+        cmds.hyperShade(shadeSelected,assign='KC_Material')
+        cmds.text('b4', edit=True, l='ON')
+        cmds.select(cl=1)
+        cmds.select(LastSel)
+        
+
+
+def ChangeTEX():
+    GetNum = cmds.getAttr("KC_File.fileTextureName")
+    Number = int(GetNum[-5])
+    if Number >= Images:
+        Newnumber = (Number - Number) + 1
+        TEXnum = str(Newnumber)
+    else:
+        Newnumber = Number + 1
+        TEXnum = str(Newnumber)
+    NewTEX = '/TEX_0' + TEXnum + '.'
+    NewFilePath = Path + NewTEX + FileType
+    
+    cmds.setAttr('KC_File.fileTextureName', NewFilePath, type="string")
+
+
+
+def AddUV():
+    NumUV = cmds.getAttr("KC_2dTexture.repeatU")
+    NewNumUV = float(NumUV)
+    if NewNumUV == 1.0:
+        FinalNumUV = NewNumUV + 0.5
+    elif NewNumUV == 1.5:
+        FinalNumUV = NewNumUV + 0.5
+    else:
+        FinalNumUV = NewNumUV + 1
+    cmds.setAttr("KC_2dTexture.repeatU", FinalNumUV)
+    cmds.setAttr("KC_2dTexture.repeatV", FinalNumUV)
+
+
+def MinusUV():
+    NumUV = cmds.getAttr("KC_2dTexture.repeatU")
+    NewNumUV = float(NumUV)
+    Zero = NewNumUV - 1
+    if Zero == 0.0:
+        print 'Zero'
+    elif NewNumUV == 2.0:
+        FinalNumUV = NewNumUV - 0.5
+        cmds.setAttr("KC_2dTexture.repeatU", FinalNumUV)
+        cmds.setAttr("KC_2dTexture.repeatV", FinalNumUV)
+    elif NewNumUV == 1.5:
+        FinalNumUV = NewNumUV - 0.5
+        cmds.setAttr("KC_2dTexture.repeatU", FinalNumUV)
+        cmds.setAttr("KC_2dTexture.repeatV", FinalNumUV)
+    else:
+        FinalNumUV = NewNumUV - 1
+        cmds.setAttr("KC_2dTexture.repeatU", FinalNumUV)
+        cmds.setAttr("KC_2dTexture.repeatV", FinalNumUV)
+
+
+def closeUI():
+    if cmds.objExists('KC_File'):
+        cmds.delete('KC_File')
+    if cmds.objExists('KC_2dTexture'):
+        cmds.delete('KC_2dTexture')
+    
+    
+    if cmds.objExists('KC_Blin'):
+        cmds.hyperShade(o='KC_Material')
+        shadeSelected = cmds.listRelatives(c=1)
+        cmds.hyperShade(shadeSelected,assign='KC_Blin')
+        cmds.delete('KC_Material')
+    else:
+        cmds.shadingNode("blinn",asShader=True,name="KC_Blin")
+        cmds.setAttr("KC_Blin.specularColor", 0, 0, 0, type='double3')
+        
+        cmds.hyperShade(o='KC_Material')
+        shadeSelected = cmds.listRelatives(c=1)
+        cmds.hyperShade(shadeSelected,assign='KC_Blin')
+        cmds.delete('KC_Material')
+
+###########
+def KCUVChecker():
+    winName = 'myUVWindows'
+    winTitle = 'KC UV Checker'
+    winWidth = 800
+    
+    if cmds.window(winName, exists=True):
+        cmds.deleteUI(winName)
+    cmds.window(winName,menuBar = True, title= winTitle)
+    cmds.formLayout('mainC',numberOfDivisions=100)
+      
+    cmds.button('b1',l= 'Assign Material',h= 30, c= 'AssignMaterial()')
+  
+    cmds.separator('b2',h= 5)
+    
+    cmds.button('b3',l= 'ON/OFF',h= 30, c= 'SwitchONOFF()')
+    
+    cmds.text('b4',label = '-')
+      
+    cmds.separator('b5',h= 5)
+      
+    cmds.button('b6',l= 'Change Texture',h= 30, c= 'ChangeTEX()')
+      
+    cmds.separator('b7',h= 5)
+      
+    cmds.button('b8',l= 'Coverage -1',h= 30, c= 'MinusUV()')
+    cmds.button('b9',l= 'Coverage +1',h= 30, c= 'AddUV()')
+      
+    
+      
+    
+    
+      
+    cmds.formLayout('mainC', edit=True, attachForm=[('b1','left',5),('b1','top',5),('b1', 'right',5)])
+      
+    cmds.formLayout('mainC', edit=True, attachForm=[('b2','left',5),('b2','top',38),('b2', 'right',5)])
+    
+    cmds.formLayout('mainC', edit=True, attachForm=[('b3','left',5),('b3','top',45),('b4', 'top',53),('b4','right',5)])
+    cmds.formLayout('mainC', edit=True, attachPosition=[('b3', 'right',5, 50),('b4', 'right',5, 100)])
+    cmds.formLayout( 'mainC', edit=True, attachControl=[('b4', 'left',5, 'b3')])   
+    
+     
+    cmds.formLayout('mainC', edit=True, attachForm=[('b5','left',5),('b5','top',78),('b5', 'right',5)])
+      
+      
+    cmds.formLayout('mainC', edit=True, attachForm=[('b6','left',5),('b6','top',85),('b6', 'right',5)])
+    
+    cmds.formLayout('mainC', edit=True, attachForm=[('b7','left',5),('b7','top',118),('b7', 'right',5)])
+      
+      
+      
+    cmds.formLayout('mainC', edit=True, attachForm=[('b8','left',5),('b8','top',125),('b9', 'top',125),('b9','right',5)])
+    cmds.formLayout('mainC', edit=True, attachPosition=[('b8', 'right',5, 50),('b9', 'right',5, 100)])
+    cmds.formLayout( 'mainC', edit=True, attachControl=[('b9', 'left',5, 'b8')])   
+    
+      
+      
+    cmds.showWindow()
+    cmds.scriptJob(uid=[winName, 'closeUI()'])
+    cmds.window(winName, e=True, width=300, height=163)
+    CreateKCmaterial()
+
+
+
+KCUVChecker()
